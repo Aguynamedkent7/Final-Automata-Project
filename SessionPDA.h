@@ -3,18 +3,17 @@
 #include <iostream>
 #include <string>
 #include <stack>
-#include <thread> // For animation sleep
-#include <chrono> // For time units
-
+#include <thread> 
+#include <chrono> 
 using namespace std;
 
-// The symbols we push onto the stack
+
 enum StackSymbol {
     WAITING_FOR_ACK,
     SESSION_ACTIVE
 };
 
-// Define states for the PDA
+
 enum class ConnectionState {
     CLOSED,
     SYN_SENT,
@@ -30,7 +29,7 @@ private:
 
     // --- VISUALIZATION HELPERS ---
     
-    // Returns a string representation of the stack's top element
+   
     string getStackVisual() const {
         if (protocolStack.empty()) return "[ EMPTY ]";
         if (protocolStack.top() == WAITING_FOR_ACK) return "[ WAIT_ACK ]";
@@ -38,9 +37,9 @@ private:
         return "[ ? ]";
     }
 
-    // Draws the PDA "Dashboard"
+    
     void drawDashboard(string actionMessage, bool success = true) const {
-        // ANSI Colors
+        
         string CYAN = "\033[1;36m";
         string GREEN = "\033[1;32m";
         string RED = "\033[1;31m";
@@ -50,10 +49,10 @@ private:
 
         string stateColor = (success) ? CYAN : RED;
         
-        // 1. Clear line to create animation frame
+        
         cout << "\r" << string(100, ' ') << "\r"; 
 
-        // 2. Draw State Machine
+
         cout << "PDA STATE: ";
         if (currentState == ConnectionState::CLOSED) cout << GREEN << "(CLOSED)" << RESET;
         else cout << DIM << "(CLOSED)" << RESET;
@@ -64,15 +63,15 @@ private:
         if (currentState == ConnectionState::ESTABLISHED) cout << CYAN << "(ESTAB)" << RESET;
         else cout << DIM << "(ESTAB)" << RESET;
 
-        // 3. Draw Stack
+
         cout << "  ||  STACK: " << YELLOW << getStackVisual() << RESET;
 
-        // 4. Draw Action Message
+       
         cout << "  ||  ACTION: " << actionMessage << flush;
     }
 
    void animateDelay() const {
-        // Slowed down to 2 seconds per logical step
+        
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     }
 
@@ -83,11 +82,11 @@ public:
     bool processPacket(const Packet& pkt) {
         cout << "\n[PDA Analysis] Processing Flags: " << pkt.flags << "\n";
 
-        // Initial Draw
+       
         drawDashboard("Analyzing Packet...", true);
         animateDelay();
 
-        // 1. Handle SYN (Start of Handshake)
+
         if (pkt.flags & SYN) {
             if (!protocolStack.empty()) {
                 drawDashboard("REJECT: Double SYN", false);
@@ -95,12 +94,12 @@ public:
                 return false;
             }
             
-            // Animation: State Change
+            
             currentState = ConnectionState::SYN_SENT;
             drawDashboard("SYN Recv -> State Change", true);
             animateDelay();
 
-            // Animation: Push to Stack
+
             protocolStack.push(WAITING_FOR_ACK);
             drawDashboard("PUSHING 'WAIT_ACK'", true);
             animateDelay();
@@ -109,9 +108,9 @@ public:
             return true;
         }
 
-        // 2. Handle ACK (Completion of Handshake)
+       
         if (pkt.flags & ACK) {
-            // Check Stack (The Context-Free Part)
+   
             if (protocolStack.empty()) {
                 drawDashboard("REJECT: Stack Empty (No SYN)", false);
                 cout << "\n\033[1;31m>>> REJECTED: ACK Scan Detected <<<\033[0m\n";
@@ -119,14 +118,14 @@ public:
             }
             
             if (protocolStack.top() == WAITING_FOR_ACK) {
-                // Pop Expectation
+               
                 protocolStack.pop();
                 drawDashboard("POPPING 'WAIT_ACK'", true);
                 animateDelay();
 
-                // Push Active Session
+                
                 protocolStack.push(SESSION_ACTIVE);
-                currentState = ConnectionState::ESTABLISHED; // Update state
+                currentState = ConnectionState::ESTABLISHED;
                 drawDashboard("PUSH 'ACTIVE' & STATE -> ESTAB", true);
                 animateDelay();
 

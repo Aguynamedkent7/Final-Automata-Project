@@ -3,15 +3,15 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <thread> // For sleep
-#include <chrono> // For time units
+#include <thread> 
+#include <chrono> 
 
 using namespace std;
 
 class StatelessDFA {
 private:
-    // Helper to draw the UI
-    void drawVisualDFA(int activeState, unsigned char inputChar) const { // Note: Changed to unsigned char
+    
+    void drawVisualDFA(int activeState, unsigned char inputChar) const { 
         cout << "\r"; 
         
         string RESET = "\033[0m";
@@ -20,17 +20,17 @@ private:
 
         auto color = [&](int stateID) { return (stateID == activeState) ? GREEN : DIM; };
 
-        // We print the hex value if it's not a printable character
+        
         string charDisplay;
         if (inputChar >= 32 && inputChar <= 126) {
-            charDisplay = string(1, inputChar); // Printable
+            charDisplay = string(1, inputChar); 
         } else {
-            charDisplay = "\\x" + to_string((int)inputChar); // Hex representation
+            charDisplay = "\\x" + to_string((int)inputChar); 
         }
 
         cout << "Scanning '" << charDisplay << "':  ";
         
-        // Path 1: "root"
+        
         cout << color(0) << "(S)" << RESET << "-r-" 
              << color(1) << "(r)" << RESET << "-o-" 
              << color(2) << "(ro)" << RESET << "-o-" 
@@ -39,8 +39,7 @@ private:
 
         cout << "  ||  ";
 
-        // Path 2: NOP Sled (\x90\x90\x90)
-        // State 0 -> 5 -> 6 -> 7 (Trap)
+       
         cout << color(5) << "(\\x90)" << RESET << "--" 
              << color(6) << "(x2)" << RESET << "--" 
              << color(7) << "[SHELLCODE]" << RESET;
@@ -59,16 +58,15 @@ public:
 
         int state = 0;
         
-        // Use unsigned char to safely handle hex values
+       
         for (unsigned char c : pkt.payload) {
             
             drawVisualDFA(state, c);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // 1.0s delay
-
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000)); 
             switch (state) {
                 case 0: 
                     if (c == 'r') state = 1;
-                    else if (c == 0x90) state = 5; // Start of NOP sled
+                    else if (c == 0x90) state = 5; 
                     else state = 0; 
                     break;
 
@@ -85,11 +83,11 @@ public:
                     else state = 0; 
                     break;
                 case 6: 
-                    if (c == 0x90) state = 7; // TRAP: 3rd NOP found
+                    if (c == 0x90) state = 7; 
                     else if (c == 'r') state = 1; 
                     else state = 0; 
                     break;
-                case 7: break; // Trap for Shellcode
+                case 7: break; 
             }
         }
         

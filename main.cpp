@@ -1,36 +1,35 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <limits> // Required for clearing input buffer
+#include <limits> 
 #include "Packet.h"
 #include "StatelessDFA.h"
 #include "SessionPDA.h"
 
 using namespace std;
 
-// --- Helper: Pauses the console until Enter is pressed ---
+
 void waitUser() {
     cout << "\n[PRESS ENTER TO PROCESS NEXT PACKET]...";
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Wait for input
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
     cout << "\n";
 }
 
 vector<Packet> createScenario_BufferOverflow() {
     vector<Packet> traffic;
-    // 1. Valid Handshake
+   
     traffic.push_back({"6.6.6.6", "10.0.0.1", SYN, ""});
     traffic.push_back({"6.6.6.6", "10.0.0.1", ACK, ""});
     
-    // 2. The Exploit Packet
-    // We construct a string containing NOPs (\x90) followed by "shellcode"
-    string exploitPayload = "\x90\x90\x90\x90\x90"; // 5 NOPs
-    exploitPayload += "\xCC\xCC"; // INT 3 (Debug Interrupt - fake shellcode)
+    
+    string exploitPayload = "\x90\x90\x90\x90\x90"; 
+    exploitPayload += "\xCC\xCC"; 
     
     traffic.push_back({"6.6.6.6", "10.0.0.1", 0, exploitPayload});
     return traffic;
 }
 
-// --- Helper functions to create scenarios ---
+
 vector<Packet> createScenario_MaliciousContent() {
     vector<Packet> traffic;
     traffic.push_back({"1.2.3.4", "10.0.0.1", SYN, ""});
@@ -52,7 +51,7 @@ int main() {
     cout << " NETWORK SECURITY AUTOMATA SIMULATOR\n";
     cout << " Press Enter to step through the simulation packet-by-packet.\n";
     cout << "==============================================================\n";
-    cin.get(); // Initial wait
+    cin.get(); 
 
     // --- TEST 1 ---
     cout << "\n=== SCENARIO 1: Malicious Payload (DFA Test) ===\n";
@@ -72,8 +71,7 @@ int main() {
         if (!pdaSafe) cout << ">>> RESULT: BLOCKED BY PDA (Protocol)\n";
         
         cout << "------------------------------------------------\n";
-        waitUser(); // <--- PAUSE HERE
-    }
+        waitUser(); 
 
     // --- TEST 2 ---
     cout << "\n=== SCENARIO 2: Out of Order Data (PDA Test) ===\n";
@@ -95,7 +93,7 @@ int main() {
         if (!pdaSafe) cout << ">>> RESULT: BLOCKED BY PDA (Invalid Handshake Sequence)\n";
         
         cout << "------------------------------------------------\n";
-        waitUser(); // <--- PAUSE HERE
+        waitUser(); 
     }
 
     // --- TEST 3 ---
