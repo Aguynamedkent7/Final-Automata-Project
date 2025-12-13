@@ -64,10 +64,11 @@ public:
             drawVisualDFA(state, c);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000)); 
             switch (state) {
+                // START STATE (Loop for anything other than threat)
                 case 0: 
                     if (c == 'r') state = 1;
                     else if (c == 0x90) state = 5; 
-                    else state = 0; 
+                    else state = 0; // Self-loop for safe characters
                     break;
 
                 // --- PATH 1: "root" ---

@@ -39,21 +39,24 @@ vector<Packet> createScenario_BufferOverflow() {
     return traffic;
 }
 
-// 4. Valid HTTP Request (Safe)
-vector<Packet> createScenario_ValidHTTP() {
+// 4. False Positive Check (Safe)
+// Tests if DFA resets correctly for words like "route" which share a prefix with "root"
+vector<Packet> createScenario_FalsePositive() {
     vector<Packet> traffic;
     traffic.push_back({"192.168.1.5", "10.0.0.1", SYN, ""});
     traffic.push_back({"192.168.1.5", "10.0.0.1", ACK, ""});
-    traffic.push_back({"192.168.1.5", "10.0.0.1", 0, "GET /index.html HTTP/1.1"});
+    traffic.push_back({"192.168.1.5", "10.0.0.1", 0, "Checking route path..."});
     return traffic;
 }
 
-// 5. SQL Injection (Passes DFA because "root" is missing - demonstrates limitation)
-vector<Packet> createScenario_SQLInjection() {
+// 5. Split Attack (Stateless Weakness)
+// Demonstrates that a Stateless DFA fails to catch "root" if split across packets
+vector<Packet> createScenario_SplitAttack() {
     vector<Packet> traffic;
     traffic.push_back({"192.168.1.5", "10.0.0.1", SYN, ""});
     traffic.push_back({"192.168.1.5", "10.0.0.1", ACK, ""});
-    traffic.push_back({"192.168.1.5", "10.0.0.1", 0, "SELECT * FROM users WHERE admin=1"});
+    traffic.push_back({"192.168.1.5", "10.0.0.1", 0, "User: ro"}); // First half
+    traffic.push_back({"192.168.1.5", "10.0.0.1", 0, "ot access"}); // Second half
     return traffic;
 }
 
@@ -125,8 +128,8 @@ int main() {
     scenarios.push_back(createScenario_MaliciousContent());
     scenarios.push_back(createScenario_OutOfOrder());
     scenarios.push_back(createScenario_BufferOverflow());
-    scenarios.push_back(createScenario_ValidHTTP());
-    scenarios.push_back(createScenario_SQLInjection());
+    scenarios.push_back(createScenario_FalsePositive());
+    scenarios.push_back(createScenario_SplitAttack());
     scenarios.push_back(createScenario_XSS());
 
     cout << "==============================================================\n";

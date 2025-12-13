@@ -15,12 +15,13 @@ const cppData = {
   scenario4: [
     { flags: 'S', payload: "" },
     { flags: 'A', payload: "" },
-    { flags: '', payload: "GET /index.html HTTP/1.1" }
+    { flags: '', payload: "Checking route path..." }
   ],
   scenario5: [
     { flags: 'S', payload: "" },
     { flags: 'A', payload: "" },
-    { flags: '', payload: "SELECT * FROM users WHERE admin=1" }
+    { flags: '', payload: "User: ro" },
+    { flags: '', payload: "ot access" }
   ],
   scenario6: [
     { flags: 'S', payload: "" },

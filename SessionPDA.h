@@ -9,6 +9,7 @@ using namespace std;
 
 
 enum StackSymbol {
+    Z0,              // Initial Stack Symbol (Bottom)
     WAITING_FOR_ACK,
     SESSION_ACTIVE
 };
@@ -31,7 +32,8 @@ private:
     
    
     string getStackVisual() const {
-        if (protocolStack.empty()) return "[ EMPTY ]";
+        if (protocolStack.empty()) return "[ ERROR: EMPTY ]"; // Should not happen with Z0
+        if (protocolStack.top() == Z0) return "[ Z0 ]";
         if (protocolStack.top() == WAITING_FOR_ACK) return "[ WAIT_ACK ]";
         if (protocolStack.top() == SESSION_ACTIVE) return "[ ACTIVE_SES ]";
         return "[ ? ]";
@@ -77,7 +79,10 @@ private:
 
 public:
     SessionPDA(const string& client, const string& server)
-        : currentState(ConnectionState::CLOSED), clientIP(client), serverIP(server) {}
+        : currentState(ConnectionState::CLOSED), clientIP(client), serverIP(server) {
+        // Initialize Stack with Z0
+        protocolStack.push(Z0);
+    }
 
     bool processPacket(const Packet& pkt) {
         cout << "\n[PDA Analysis] Processing Flags: " << pkt.flags << "\n";
@@ -88,8 +93,9 @@ public:
 
 
         if (pkt.flags & SYN) {
-            if (!protocolStack.empty()) {
-                drawDashboard("REJECT: Double SYN", false);
+            // Check if stack has only Z0 (valid start condition)
+            if (protocolStack.top() != Z0) {
+                drawDashboard("REJECT: Double SYN or Dirty Stack", false);
                 cout << "\n";
                 return false;
             }
@@ -111,8 +117,9 @@ public:
        
         if (pkt.flags & ACK) {
    
-            if (protocolStack.empty()) {
-                drawDashboard("REJECT: Stack Empty (No SYN)", false);
+            // If stack only has Z0, we haven't seen a SYN yet
+            if (protocolStack.top() == Z0) {
+                drawDashboard("REJECT: Only Z0 (No SYN)", false);
                 cout << "\n\033[1;31m>>> REJECTED: ACK Scan Detected <<<\033[0m\n";
                 return false;
             }
@@ -136,7 +143,7 @@ public:
 
         // 3. Handle Data Payload (Needs Active Session)
         if (!pkt.payload.empty()) {
-            if (protocolStack.empty() || protocolStack.top() != SESSION_ACTIVE) {
+            if (protocolStack.top() != SESSION_ACTIVE) {
                  drawDashboard("REJECT: No Session on Stack", false);
                  cout << "\n\033[1;31m>>> REJECTED: Data without Handshake <<<\033[0m\n";
                  return false;
